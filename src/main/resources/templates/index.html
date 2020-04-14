@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Uni Service</title>
+</head>
+<body>
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+<div>
+    <h4>Список студентів</h4>
+    <table>
+        <thead>
+        <th>ID</th>
+        <th>ПІБ</th>
+        <th>Курс</th>
+        </thead>
+        <tbody id="studentsList">
+        </tbody>
+    </table>
+</div>
+<div>
+    <h4>Отримати додаткову інформацію про студентів</h4>
+    <form id="getStudent" method="post">
+        <label>
+            ID студента:
+            <input type="text" name="studentId">
+            <button type="submit">Отримати</button>
+        </label>
+    </form>
+</div>
+<div id="student">
+    <div id="studentInfo">
+    </div>
+    <div>
+        <h4>Список дисцеплін студента</h4>
+        <table>
+            <thead>
+            <th>ID</th>
+            <th>Оцінка</th>
+            <th>Назва предмету</th>
+            <th>Кількість кредитів</th>
+            </thead>
+            <tbody id="disciplinesList">
+            </tbody>
+        </table>
+    </div>
+</div>
+<script>
+    $('#student').hide();
+</script>
+<script>
+    $(document).ready(
+        () => {
+            loadStudents();
+            $('#getStudent').submit(function (e) {
+                e.preventDefault();
+                $.ajax({
+                    type: 'GET',
+                    url: '/students/' + $(this).find('[name=studentId]').val(),
+                    dataType: 'json',
+                    beforeSend: function (xhr) {
+                        xhr.setRequestHeader('Content-Type', 'application/json');
+                    },
+                    success: function (response) {
+                        studentInfo(response);
+                    }
+                })
+            });
+
+        }
+    );
+
+    function studentInfo(data) {
+        let $studentInfo = $('#studentInfo');
+        let $disciplinesList = $('#disciplinesList');
+
+        $('#student').show();
+        $studentInfo.empty();
+        $disciplinesList.empty();
+
+        $studentInfo.append(`<h4>ПІБ: ` + data.fio + `</h4>`);
+        $studentInfo.append(`<h4>Курс студента: ` + data.course + `</h4>`);
+
+        data.enrollments.forEach(enr => {
+            $disciplinesList.append('<tr><td>' + enr.discipline.id + '</td><td>' + enr.grade + '</td><td>'
+                + enr.discipline.name + '</td><td>' + enr.discipline.credits + '</td></tr>')
+        })
+    }
+
+    function loadStudents() {
+        $.ajax({
+            url: '/students',
+            success: (response) => (setStudentList(response))
+        })
+    }
+
+
+    function setStudentList(data) {
+
+        let $students = $('#studentsList');
+
+        $students.empty();
+
+        data.forEach(student => {
+            $students.append('<tr><td>' + student.id + '</td><td>' + student.fio + '</td><td>'
+                + student.course + '</td></tr>')
+        })
+
+    }
+</script>
+</body>
+</html>
